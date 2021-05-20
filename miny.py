@@ -8,4 +8,4 @@ Python 3.8
 import random, pygame
 
 while True:
-    
+    print(input())
