@@ -11,3 +11,4 @@ while True:
     print(input("ahoj: "))
     if True:
         print(random.randint(1,2))
+    print(5+1)
