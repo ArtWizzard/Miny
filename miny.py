@@ -8,4 +8,6 @@ Python 3.8
 import random, pygame
 
 while True:
-    print(input())
+    print(input("ahoj: "))
+    if True:
+        print(random.randint(1,2))
