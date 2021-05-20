@@ -12,3 +12,5 @@ while True:
     if True:
         print(random.randint(1,2))
     print(5+1)
+    for i in range(5):
+        print("ahoj\n")
