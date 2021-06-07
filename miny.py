@@ -6,7 +6,7 @@ Python 3.8
 """
 
 import random, pygame, sys
-
+# ----------------------------------------------------------------------------- Classes
 class FIELD():
     def __init__(self):
         self.field = []
@@ -179,8 +179,29 @@ class MAIN():
             self.game_over()
             
         # field.draw_field(True)  # kontrola vykreslení - co se stane po kliknutí na políčko
-
+        
+# ----------------------------------------------------------------------------- Functions
+def mouse_click():
+    coordinates = pygame.mouse.get_pos()
+    for x in range(x_cell_number):
+        if coordinates[0] <= x * cell_size + cell_size:
+            mouse_pos_x = x
+            break
             
+    for y in range(y_cell_number):
+        if coordinates[1] <= y * cell_size + cell_size:
+            mouse_pos_y = y
+            break
+    field.write_field(mouse_pos_x, mouse_pos_y)
+    # print(mouse_pos_x, mouse_pos_y)
+    # if not field.write_field(mouse_pos_x, mouse_pos_y):
+    #     print("Game over")
+    #     break
+    main.win()
+        # field.draw_field(True) # True - show all
+        # print("You're a winner!")
+        # main.game_over()
+        # break
 # ----------------------------------------------------------------------------- Inicialization
 pygame.init()
 pygame.display.set_caption("Miny")
@@ -215,29 +236,30 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()
             if mouse_presses[0]:    
-                # 0 ... left, 1 ... middle, 2 ... right
-                # print("Left Mouse key was clicked")   # vykreslení eventu myši
-                # print(pygame.mouse.get_pos())
-                coordinates = pygame.mouse.get_pos()
-                for x in range(x_cell_number):
-                    if coordinates[0] <= x * cell_size + cell_size:
-                        mouse_pos_x = x
-                        break
-                for y in range(y_cell_number):
-                    if coordinates[1] <= y * cell_size + cell_size:
-                        mouse_pos_y = y
-                        break
-                
-                field.write_field(mouse_pos_x, mouse_pos_y)
-                # print(mouse_pos_x, mouse_pos_y)
-                # if not field.write_field(mouse_pos_x, mouse_pos_y):
-                #     print("Game over")
-                #     break
-                main.win()
-                    # field.draw_field(True) # True - show all
-                    # print("You're a winner!")
-                    # main.game_over()
-                    # break
+                mouse_click()
+                # # 0 ... left, 1 ... middle, 2 ... right
+                # # print("Left Mouse key was clicked")   # vykreslení eventu myši
+                # # print(pygame.mouse.get_pos())
+                # coordinates = pygame.mouse.get_pos()
+                # for x in range(x_cell_number):
+                #     if coordinates[0] <= x * cell_size + cell_size:
+                #         mouse_pos_x = x
+                #         break
+                        
+                # for y in range(y_cell_number):
+                #     if coordinates[1] <= y * cell_size + cell_size:
+                #         mouse_pos_y = y
+                #         break
+                # field.write_field(mouse_pos_x, mouse_pos_y)
+                # # print(mouse_pos_x, mouse_pos_y)
+                # # if not field.write_field(mouse_pos_x, mouse_pos_y):
+                # #     print("Game over")
+                # #     break
+                # main.win()
+                #     # field.draw_field(True) # True - show all
+                #     # print("You're a winner!")
+                #     # main.game_over()
+                #     # break
     
     screen.fill(mode[2])
     main.draw_elements()
