@@ -24,7 +24,7 @@ class FIELD():
        
     # Adds all mine to the self.pole
     def mine_field_init(self):
-        mine_number = (x_cell_number + y_cell_number) // 2
+        mine_number = (x_cell_number + y_cell_number) // 2 # vydělíme dvěma pro rychlejší hru
         # mine_number = 1 # testing winning function - fast win
         
         # Draw defined number of mine
@@ -59,10 +59,11 @@ class FIELD():
     def draw_field(self, ending):
         for y in range(y_cell_number):
             for x in range(x_cell_number):
-                if ending or ("." in self.field[x][y]):
-                    print(self.field[x][y][:1], end=" ")
-                else:
-                    print("?", end=" ")
+                print(self.field[x][y], end=" ")
+                # if ending or ("." in self.field[x][y]):
+                #     print(self.field[x][y][:1], end=" ")
+                # else:
+                #     print("?", end=" ")
             print()
     
     # HMI
@@ -75,20 +76,10 @@ class FIELD():
             main.game_over()
         else:
             # I hit number (next to the mine)
-            self.field[x][y] += "."
+            if not "." in self.field[x][y]:
+                self.field[x][y] += "."
     
-    # function for detection any reamaining save places - win
-    def win(self):
-        # print(self.field)
-        remaining_places = 0
-        for row in self.field:
-            for item in row:
-                if not "." in item and not "m" in item:
-                    remaining_places += 1
-        if remaining_places == 0:
-            field.draw_field(True) # True - show all
-            print("You're a winner!")
-            main.game_over()
+
         
     # "infinity" loop for showing empy field
     def near(self, x, y):
@@ -105,16 +96,30 @@ class FIELD():
                             
 class MAIN():
     def __init__(self):
-        self.box = pygame.image.load("Graphics/box.png").convert_alpha()
+        self.clicked_box = pygame.image.load("Graphics/clicked_box.png").convert_alpha()
+        self.unclicked_box = pygame.image.load("Graphics/unclicked_box.png").convert_alpha()
+        self.number_color = {"1":(0, 0, 200),
+                             "2":(0, 130, 0),
+                             "3":(255, 60, 0),
+                             "4":(190, 0, 10),
+                             "5":(170, 0, 20),
+                             "6":(130, 0, 50),
+                             "7":(80, 0, 30),
+                             "8":(30, 0, 30)}
+        
         
     def draw_field(self):
         # grass_color = (167,209,61)
         for row in range(y_cell_number):
             for col in range(x_cell_number):
-                x_pos = int(row * cell_size)
-                y_pos = int(col * cell_size)
+                x_pos = int(col * cell_size)
+                y_pos = int(row * cell_size)
                 box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
-                screen.blit(self.box, box_rect)
+                
+                if "." in field.field[col][row]:
+                    screen.blit(self.clicked_box, box_rect)
+                else:
+                    screen.blit(self.unclicked_box, box_rect)
                 
                 # grass_rect = pygame.Rect(col*cell_size, row*cell_size, cell_size, cell_size)  # (x, y, w, h)
                 # pygame.draw.rect(screen, grass_color, grass_rect)
@@ -138,23 +143,44 @@ class MAIN():
         
     def draw_numbers(self):
         # score_text = "0"
-        number_color = (128, 0, 0)
+        # number_color = mode[0]
         for row in range(y_cell_number):
             for col in range(x_cell_number):
                 if "." in field.field[col][row]:
+                    # change_number_color = 0
                     if "0" in field.field[col][row]:
                         number_text = ""
                     else:   
                         number_text = field.field[col][row][:1]
-                else:
-                    number_text = "?"
-                number_surface = game_font.render(number_text, True, number_color)   # (text, aa, color)
-                number_x = int(cell_size * col + cell_size/2)
-                number_y = int(cell_size * row + cell_size/2)
-                number_rect = number_surface.get_rect(center = (number_x, number_y))
+                        # if 49 <= ord(number_text) <= 57:
+                            # change_number_color = 30*int(i)     
+                    
+                    # number_surface = game_font.render(number_text, True, (255, 255-change_number_color, 255-change_number_color))   # (text, aa, color)
+                    number_surface = game_font.render(number_text, True, self.number_color.get(number_text, (0, 0, 0)))   # (text, aa, color)
+                    number_x = int(cell_size * col + cell_size/2)
+                    number_y = int(cell_size * row + cell_size/2)
+                    number_rect = number_surface.get_rect(center = (number_x, number_y))
+                    
+                    screen.blit(number_surface, number_rect)        # (score_surface, position)
                 
-                screen.blit(number_surface, number_rect)        # (score_surface, position)
-                
+    # function for detection any reamaining save places - win
+    def win(self):
+        # print(self.field)
+        remaining_places = 0
+        for row in field.field:
+            for item in row:
+                if not "." in item and not "m" in item:
+                    remaining_places += +1
+            #     print(item, end = " ")
+            # print()
+        if remaining_places == 0:
+            # field.draw_field(True) # True - show all
+            print("You're a winner!")
+            self.game_over()
+            
+        # field.draw_field(True)  # kontrola vykreslení - co se stane po kliknutí na políčko
+
+            
 # ----------------------------------------------------------------------------- Inicialization
 pygame.init()
 pygame.display.set_caption("Miny")
@@ -163,7 +189,12 @@ x_cell_number = 10
 y_cell_number = 10
 cell_size = 50
 
-game_font = pygame.font.Font('Fonts/rainyhearts.ttf', 25)
+black_and_white = [0, 20, 70, 255]
+mode = []
+for color in black_and_white:
+    mode.append((color, color, color))
+
+game_font = pygame.font.Font('Fonts/Retro Gaming.ttf', 25)
 screen = pygame.display.set_mode((x_cell_number * cell_size, y_cell_number * cell_size))
 clock = pygame.time.Clock()
 
@@ -183,7 +214,8 @@ while True:
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()
-            if mouse_presses[0]:
+            if mouse_presses[0]:    
+                # 0 ... left, 1 ... middle, 2 ... right
                 # print("Left Mouse key was clicked")   # vykreslení eventu myši
                 # print(pygame.mouse.get_pos())
                 coordinates = pygame.mouse.get_pos()
@@ -201,13 +233,13 @@ while True:
                 # if not field.write_field(mouse_pos_x, mouse_pos_y):
                 #     print("Game over")
                 #     break
-                field.win()
+                main.win()
                     # field.draw_field(True) # True - show all
                     # print("You're a winner!")
                     # main.game_over()
                     # break
     
-    screen.fill((204, 204, 204))
+    screen.fill(mode[2])
     main.draw_elements()
     pygame.display.update()
     clock.tick(60)
