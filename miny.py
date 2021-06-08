@@ -68,16 +68,22 @@ class FIELD():
     
     # HMI
     def write_field(self, x, y):
-        if self.field[x][y] == "0":
-            # showing empty field - i hit nothing
-            self.near(x,y)
-        elif self.field[x][y] == "m":
-            # game over - I hit mine
-            main.game_over()
-        else:
-            # I hit number (next to the mine)
-            if not "." in self.field[x][y]:
-                self.field[x][y] += "."
+        if mouse_presses[0]:
+            if self.field[x][y] == "0":
+                # showing empty field - i hit nothing
+                self.near(x,y)
+            elif self.field[x][y] == "m":
+                # game over - I hit mine
+                main.game_over()
+            else:
+                # I hit number (next to the mine)
+                if not "." in self.field[x][y] and not "?" in self.field[x][y]:
+                    self.field[x][y] += "."
+        elif mouse_presses[2]:
+            if not "." in self.field[x][y] and not "?" in self.field[x][y]:
+                self.field[x][y] += "?"
+
+                
     
 
         
@@ -91,8 +97,7 @@ class FIELD():
                         self.near(x+x1, y+y1)
                     else:
                         if not "." in self.field[x+x1][y+y1]:
-                            if not "." in self.field[x+x1][y+y1]:
-                                self.field[x+x1][y+y1] += "."
+                            self.field[x+x1][y+y1] += "."
                             
 class MAIN():
     def __init__(self):
@@ -125,6 +130,7 @@ class MAIN():
                 # pygame.draw.rect(screen, grass_color, grass_rect)
                         
     def game_over(self):
+        # # Potřebuju vykreslit celé pole i s minama, když skončím
         # self.draw_field()
         # self.draw_elements(True)
         # pygame.display.update()
@@ -192,16 +198,10 @@ def mouse_click():
         if coordinates[1] <= y * cell_size + cell_size:
             mouse_pos_y = y
             break
+
     field.write_field(mouse_pos_x, mouse_pos_y)
-    # print(mouse_pos_x, mouse_pos_y)
-    # if not field.write_field(mouse_pos_x, mouse_pos_y):
-    #     print("Game over")
-    #     break
     main.win()
-        # field.draw_field(True) # True - show all
-        # print("You're a winner!")
-        # main.game_over()
-        # break
+    
 # ----------------------------------------------------------------------------- Inicialization
 pygame.init()
 pygame.display.set_caption("Miny")
@@ -230,13 +230,12 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             main.game_over()
-        # if event.type == SCREEN_UPDATE:
-        #     main.draw_field()
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()
-            if mouse_presses[0]:    
+            if mouse_presses[0] or mouse_presses[2]:    
                 mouse_click()
+                
                 # # 0 ... left, 1 ... middle, 2 ... right
                 # # print("Left Mouse key was clicked")   # vykreslení eventu myši
                 # # print(pygame.mouse.get_pos())
