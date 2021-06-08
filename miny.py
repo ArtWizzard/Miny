@@ -9,11 +9,11 @@ import random, pygame, sys
 # ----------------------------------------------------------------------------- Classes
 class FIELD():
     def __init__(self):
-        self.field = []
         self.field_init()
     
     # Generating random field
     def field_init(self):
+        self.field = []
         for row in range(y_cell_number):
             temp = []
             for col in range(x_cell_number):
@@ -55,17 +55,6 @@ class FIELD():
                         number += 1
         return number
     
-    # Draws field into the console
-    def draw_field(self, ending):
-        for y in range(y_cell_number):
-            for x in range(x_cell_number):
-                print(self.field[x][y], end=" ")
-                # if ending or ("." in self.field[x][y]):
-                #     print(self.field[x][y][:1], end=" ")
-                # else:
-                #     print("?", end=" ")
-            print()
-    
     # HMI
     def write_field(self, x, y):
         if mouse_presses[0]:
@@ -74,7 +63,7 @@ class FIELD():
                 self.near(x,y)
             elif self.field[x][y] == "m":
                 # game over - I hit mine
-                main.game_over()
+                main.game_quit()
             else:
                 # I hit number (next to the mine)
                 if not "." in self.field[x][y] and not "?" in self.field[x][y]:
@@ -86,11 +75,25 @@ class FIELD():
                     print("Bargr")
                 else:
                     self.field[x][y] += "?"
-        self.draw_field(True) # test drawing - shows what's in the battle field
-                
-    
-
+        # self.draw_field(True) # test drawing - shows what's in the battle field
         
+    def click_in_field(self):
+        coordinates = pygame.mouse.get_pos()
+        if coordinates[1] >= 2 * cell_size:
+            for x in range(x_cell_number):
+                if coordinates[0] <= x * cell_size + cell_size:
+                    mouse_pos_x = x
+                    break
+            
+            for y in range(y_cell_number + menu_height):
+                if coordinates[1] <= y * cell_size + cell_size + menu_height:
+                    mouse_pos_y = y
+                    break
+                
+            
+            self.write_field(mouse_pos_x, mouse_pos_y)
+            main.win()
+
     # "infinity" loop for showing empty field
     def near(self, x, y):
         self.field[x][y] += "."
@@ -103,13 +106,54 @@ class FIELD():
                         else:
                             if not "." in self.field[x+x1][y+y1]:
                                 self.field[x+x1][y+y1] += "."
+    
+    # Draws field into the console
+    def draw_field(self, ending):
+        for y in range(y_cell_number):
+            for x in range(x_cell_number):
+                print(self.field[x][y], end=" ")
+                # if ending or ("." in self.field[x][y]):
+                #     print(self.field[x][y][:1], end=" ")
+                # else:
+                #     print("?", end=" ")
+            print()
+            
+class MENU():
+    def __init__(self):
+        self.sad_sun = pygame.image.load("Graphics/sad_sun.png").convert_alpha()
+        self.happy_sun = pygame.image.load("Graphics/happy_sun.png").convert_alpha()
+        self.surprised_sun = pygame.image.load("Graphics/surprised_sun.png").convert_alpha()
+        self.sun_box = pygame.image.load("Graphics/sun_box.png").convert_alpha()
+        self.x_pos = ((x_cell_number * cell_size) - cell_size ) // 2
+        self.y_pos = cell_size // 2
+        
+    
+    def draw_menu(self):
+        # Draw background
+        background_color = dark_mode[3]
+        background_size_x = cell_size * x_cell_number
+        background_size_y = menu_height
+        background_rect = pygame.Rect(0, 0, background_size_x, background_size_y)
+        pygame.draw.rect(screen,background_color, background_rect)
+        
+        sun_rect = pygame.Rect(self.x_pos, self.y_pos, cell_size, cell_size)
+        screen.blit(self.sun_box, sun_rect)
+        screen.blit(self.happy_sun, sun_rect)
+        
+    def click_in_menu(self):
+        coordinates = pygame.mouse.get_pos()
+        if self.x_pos <= coordinates[0] <= self.x_pos + cell_size and self.y_pos <= coordinates[1] <= self.y_pos + cell_size:  
+            # function to reset field
+            main.field.field_init()
                             
 class MAIN():
     def __init__(self):
+        self.field = FIELD()
+        self.menu = MENU()
         self.clicked_box = pygame.image.load("Graphics/clicked_box.png").convert_alpha()
         self.unclicked_box = pygame.image.load("Graphics/unclicked_box.png").convert_alpha()
         self.mine_box = pygame.image.load("Graphics/mine_box.png").convert_alpha()
-        self.number_color = {"1":(0, 0, 200),
+        self.number_color = {"1":(0, 0, 200),   # switch to paint numbers
                              "2":(0, 130, 0),
                              "3":(255, 60, 0),
                              "4":(190, 0, 10),
@@ -118,7 +162,7 @@ class MAIN():
                              "7":(80, 0, 30),
                              "8":(30, 0, 30)}
           
-    def game_over(self):
+    def game_quit(self):
         # # Potřebuju vykreslit celé pole i s minama, když skončím
         # self.draw_field()
         # self.draw_elements(True)
@@ -135,18 +179,19 @@ class MAIN():
     def draw_elements(self):
         self.draw_field()
         self.draw_numbers()
+        self.menu.draw_menu()
         
     def draw_field(self):
         # grass_color = (167,209,61)
         for row in range(y_cell_number):
             for col in range(x_cell_number):
                 x_pos = int(col * cell_size)
-                y_pos = int(row * cell_size)
+                y_pos = int(row * cell_size + menu_height)
                 box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
                 
-                if "." in field.field[col][row]:
+                if "." in self.field.field[col][row]:
                     screen.blit(self.clicked_box, box_rect)
-                elif "?" in field.field[col][row]:
+                elif "?" in self.field.field[col][row]:
                     screen.blit(self.mine_box, box_rect)
                 else:
                     screen.blit(self.unclicked_box, box_rect)
@@ -156,22 +201,22 @@ class MAIN():
                 
     def draw_numbers(self):
         # score_text = "0"
-        # number_color = mode[0]
+        # number_color = dark_mode[0]
         for row in range(y_cell_number):
             for col in range(x_cell_number):
-                if "." in field.field[col][row]:
+                if "." in self.field.field[col][row]:
                     # change_number_color = 0
-                    if "0" in field.field[col][row]:
+                    if "0" in self.field.field[col][row]:
                         number_text = ""
                     else:   
-                        number_text = field.field[col][row][:1]
+                        number_text = self.field.field[col][row][:1]
                         # if 49 <= ord(number_text) <= 57:
                             # change_number_color = 30*int(i)     
                     
                     # number_surface = game_font.render(number_text, True, (255, 255-change_number_color, 255-change_number_color))   # (text, aa, color)
                     number_surface = game_font.render(number_text, True, self.number_color.get(number_text, (0, 0, 0)))   # (text, aa, color)
                     number_x = int(cell_size * col + cell_size/2)
-                    number_y = int(cell_size * row + cell_size/2)
+                    number_y = int(cell_size * row + cell_size/2 + menu_height)
                     number_rect = number_surface.get_rect(center = (number_x, number_y))
                     
                     screen.blit(number_surface, number_rect)        # (score_surface, position)
@@ -180,7 +225,7 @@ class MAIN():
     def win(self):
         # print(self.field)
         remaining_places = 0
-        for row in field.field:
+        for row in self.field.field:
             for item in row:
                 if not "." in item and not "m" in item:
                     remaining_places += +1
@@ -189,25 +234,16 @@ class MAIN():
         if remaining_places == 0:
             # field.draw_field(True) # True - show all
             print("You're a winner!")
-            self.game_over()
+            self.game_quit()
             
         # field.draw_field(True)  # kontrola vykreslení - co se stane po kliknutí na políčko
         
+    def mouse_click(self):
+        self.field.click_in_field()
+        self.menu.click_in_menu()
+        
 # ----------------------------------------------------------------------------- Functions
-def mouse_click():
-    coordinates = pygame.mouse.get_pos()
-    for x in range(x_cell_number):
-        if coordinates[0] <= x * cell_size + cell_size:
-            mouse_pos_x = x
-            break
-            
-    for y in range(y_cell_number):
-        if coordinates[1] <= y * cell_size + cell_size:
-            mouse_pos_y = y
-            break
 
-    field.write_field(mouse_pos_x, mouse_pos_y)
-    main.win()
     
 # ----------------------------------------------------------------------------- Inicialization
 pygame.init()
@@ -216,17 +252,17 @@ pygame.display.set_caption("Miny")
 x_cell_number = 10
 y_cell_number = 10
 cell_size = 50
+menu_height = 100
 
-black_and_white = [0, 20, 70, 255]
-mode = []
+black_and_white = [0, 20, 70, 150, 255]
+dark_mode = []
 for color in black_and_white:
-    mode.append((color, color, color))
+    dark_mode.append((color, color, color))
 
 game_font = pygame.font.Font('Fonts/Retro Gaming.ttf', 25)
-screen = pygame.display.set_mode((x_cell_number * cell_size, y_cell_number * cell_size))
+screen = pygame.display.set_mode((x_cell_number * cell_size, y_cell_number * cell_size + menu_height))
 clock = pygame.time.Clock()
 
-field = FIELD()
 main = MAIN()
 
 SCREEN_UPDATE = pygame.USEREVENT
@@ -236,38 +272,15 @@ pygame.time.set_timer(SCREEN_UPDATE, 150)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            main.game_over()
+            main.game_quit()
             
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # 0 ... left, 1 ... middle, 2 ... right
             mouse_presses = pygame.mouse.get_pressed()
             if mouse_presses[0] or mouse_presses[2]:    
-                mouse_click()
-                
-                # # 0 ... left, 1 ... middle, 2 ... right
-                # # print("Left Mouse key was clicked")   # vykreslení eventu myši
-                # # print(pygame.mouse.get_pos())
-                # coordinates = pygame.mouse.get_pos()
-                # for x in range(x_cell_number):
-                #     if coordinates[0] <= x * cell_size + cell_size:
-                #         mouse_pos_x = x
-                #         break
-                        
-                # for y in range(y_cell_number):
-                #     if coordinates[1] <= y * cell_size + cell_size:
-                #         mouse_pos_y = y
-                #         break
-                # field.write_field(mouse_pos_x, mouse_pos_y)
-                # # print(mouse_pos_x, mouse_pos_y)
-                # # if not field.write_field(mouse_pos_x, mouse_pos_y):
-                # #     print("Game over")
-                # #     break
-                # main.win()
-                #     # field.draw_field(True) # True - show all
-                #     # print("You're a winner!")
-                #     # main.game_over()
-                #     # break
+                main.mouse_click()
     
-    screen.fill(mode[2])
+    screen.fill(dark_mode[2])
     main.draw_elements()
     pygame.display.update()
     clock.tick(60)
