@@ -80,29 +80,35 @@ class FIELD():
                 if not "." in self.field[x][y] and not "?" in self.field[x][y]:
                     self.field[x][y] += "."
         elif mouse_presses[2]:
-            if not "." in self.field[x][y] and not "?" in self.field[x][y]:
-                self.field[x][y] += "?"
-
+            if not "." in self.field[x][y]:
+                if "?" in self.field[x][y]:
+                    self.field[x][y] = self.field[x][y].replace("?", "") # change box from "maybe mine" to unclicked
+                    print("Bargr")
+                else:
+                    self.field[x][y] += "?"
+        self.draw_field(True) # test drawing - shows what's in the battle field
                 
     
 
         
-    # "infinity" loop for showing empy field
+    # "infinity" loop for showing empty field
     def near(self, x, y):
         self.field[x][y] += "."
         for y1 in range(-1, 2):
             for x1 in range(-1, 2):
                 if 0 <= x + x1 < x_cell_number and 0 <= y + y1 < y_cell_number:
-                    if self.field[x+x1][y+y1] == "0":
-                        self.near(x+x1, y+y1)
-                    else:
-                        if not "." in self.field[x+x1][y+y1]:
-                            self.field[x+x1][y+y1] += "."
+                    if not "?" in self.field[x+x1][y+y1]:
+                        if self.field[x+x1][y+y1] == "0":
+                            self.near(x+x1, y+y1)
+                        else:
+                            if not "." in self.field[x+x1][y+y1]:
+                                self.field[x+x1][y+y1] += "."
                             
 class MAIN():
     def __init__(self):
         self.clicked_box = pygame.image.load("Graphics/clicked_box.png").convert_alpha()
         self.unclicked_box = pygame.image.load("Graphics/unclicked_box.png").convert_alpha()
+        self.mine_box = pygame.image.load("Graphics/mine_box.png").convert_alpha()
         self.number_color = {"1":(0, 0, 200),
                              "2":(0, 130, 0),
                              "3":(255, 60, 0),
@@ -111,24 +117,7 @@ class MAIN():
                              "6":(130, 0, 50),
                              "7":(80, 0, 30),
                              "8":(30, 0, 30)}
-        
-        
-    def draw_field(self):
-        # grass_color = (167,209,61)
-        for row in range(y_cell_number):
-            for col in range(x_cell_number):
-                x_pos = int(col * cell_size)
-                y_pos = int(row * cell_size)
-                box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
-                
-                if "." in field.field[col][row]:
-                    screen.blit(self.clicked_box, box_rect)
-                else:
-                    screen.blit(self.unclicked_box, box_rect)
-                
-                # grass_rect = pygame.Rect(col*cell_size, row*cell_size, cell_size, cell_size)  # (x, y, w, h)
-                # pygame.draw.rect(screen, grass_color, grass_rect)
-                        
+          
     def game_over(self):
         # # Potřebuju vykreslit celé pole i s minama, když skončím
         # self.draw_field()
@@ -147,6 +136,24 @@ class MAIN():
         self.draw_field()
         self.draw_numbers()
         
+    def draw_field(self):
+        # grass_color = (167,209,61)
+        for row in range(y_cell_number):
+            for col in range(x_cell_number):
+                x_pos = int(col * cell_size)
+                y_pos = int(row * cell_size)
+                box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
+                
+                if "." in field.field[col][row]:
+                    screen.blit(self.clicked_box, box_rect)
+                elif "?" in field.field[col][row]:
+                    screen.blit(self.mine_box, box_rect)
+                else:
+                    screen.blit(self.unclicked_box, box_rect)
+                
+                # grass_rect = pygame.Rect(col*cell_size, row*cell_size, cell_size, cell_size)  # (x, y, w, h)
+                # pygame.draw.rect(screen, grass_color, grass_rect)
+                
     def draw_numbers(self):
         # score_text = "0"
         # number_color = mode[0]
