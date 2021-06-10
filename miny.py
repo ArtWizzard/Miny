@@ -62,8 +62,11 @@ class FIELD():
                 # showing empty field - i hit nothing
                 self.near(x,y)
             elif self.field[x][y] == "m":
-                # game over - I hit mine
-                main.game_quit()
+                # change sun's look
+                main.menu.actual_sun = main.menu.sad_sun
+                
+                # set game over
+                main.game_over = True
             else:
                 # I hit number (next to the mine)
                 if not "." in self.field[x][y] and not "?" in self.field[x][y]:
@@ -72,10 +75,10 @@ class FIELD():
             if not "." in self.field[x][y]:
                 if "?" in self.field[x][y]:
                     self.field[x][y] = self.field[x][y].replace("?", "") # change box from "maybe mine" to unclicked
-                    print("Bargr")
+                    # print("Bagr")
                 else:
                     self.field[x][y] += "?"
-        # self.draw_field(True) # test drawing - shows what's in the battle field
+        # self.draw_field() # test drawing - shows what's in the battle field
         
     def click_in_field(self):
         coordinates = pygame.mouse.get_pos()
@@ -107,24 +110,24 @@ class FIELD():
                             if not "." in self.field[x+x1][y+y1]:
                                 self.field[x+x1][y+y1] += "."
     
-    # Draws field into the console
-    def draw_field(self, ending):
-        for y in range(y_cell_number):
-            for x in range(x_cell_number):
-                print(self.field[x][y], end=" ")
-                # if ending or ("." in self.field[x][y]):
-                #     print(self.field[x][y][:1], end=" ")
-                # else:
-                #     print("?", end=" ")
-            print()
+    # # Draws field into the console
+    # def draw_field(self):
+    #     for y in range(y_cell_number):
+    #         for x in range(x_cell_number):
+    #             print(self.field[x][y], end=" ")
+    #         print()
             
 class MENU():
     def __init__(self):
-        self.sad_sun = pygame.image.load("Graphics/sad_sun.png").convert_alpha()
+        self.sad_sun = pygame.image.load("Graphics/sad_sun.png").convert_alpha()    # pictures
         self.happy_sun = pygame.image.load("Graphics/happy_sun.png").convert_alpha()
         self.surprised_sun = pygame.image.load("Graphics/surprised_sun.png").convert_alpha()
         self.sun_box = pygame.image.load("Graphics/sun_box.png").convert_alpha()
-        self.x_pos = ((x_cell_number * cell_size) - cell_size ) // 2
+        self.like_a_boss_sun = pygame.image.load("Graphics/like_a_boss_sun.png").convert_alpha()
+        
+        self.actual_sun = self.happy_sun
+        
+        self.x_pos = ((x_cell_number * cell_size) - cell_size ) // 2    # position of sun - center of menu
         self.y_pos = cell_size // 2
         
     
@@ -138,13 +141,19 @@ class MENU():
         
         sun_rect = pygame.Rect(self.x_pos, self.y_pos, cell_size, cell_size)
         screen.blit(self.sun_box, sun_rect)
-        screen.blit(self.happy_sun, sun_rect)
+        screen.blit(self.actual_sun, sun_rect)
         
     def click_in_menu(self):
         coordinates = pygame.mouse.get_pos()
         if self.x_pos <= coordinates[0] <= self.x_pos + cell_size and self.y_pos <= coordinates[1] <= self.y_pos + cell_size:  
+            # change sun's look
+            self.actual_sun = self.surprised_sun
+            
             # function to reset field
             main.field.field_init()
+            
+            # reset game
+            main.game_over = False
                             
 class MAIN():
     def __init__(self):
@@ -153,6 +162,7 @@ class MAIN():
         self.clicked_box = pygame.image.load("Graphics/clicked_box.png").convert_alpha()
         self.unclicked_box = pygame.image.load("Graphics/unclicked_box.png").convert_alpha()
         self.mine_box = pygame.image.load("Graphics/mine_box.png").convert_alpha()
+        self.mine = pygame.image.load("Graphics/mine.png").convert_alpha()
         self.number_color = {"1":(0, 0, 200),   # switch to paint numbers
                              "2":(0, 130, 0),
                              "3":(255, 60, 0),
@@ -161,17 +171,9 @@ class MAIN():
                              "6":(130, 0, 50),
                              "7":(80, 0, 30),
                              "8":(30, 0, 30)}
+        self.game_over = False
           
     def game_quit(self):
-        # # Potřebuju vykreslit celé pole i s minama, když skončím
-        # self.draw_field()
-        # self.draw_elements(True)
-        # pygame.display.update()
-        
-        # screen.fill((204, 204, 204))
-        # self.draw_elements()
-        # pygame.display.update()
-        
         pygame.quit()
         sys.exit()
         
@@ -179,6 +181,8 @@ class MAIN():
     def draw_elements(self):
         self.draw_field()
         self.draw_numbers()
+        if self.game_over:
+            self.draw_mine()
         self.menu.draw_menu()
         
     def draw_field(self):
@@ -189,7 +193,7 @@ class MAIN():
                 y_pos = int(row * cell_size + menu_height)
                 box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
                 
-                if "." in self.field.field[col][row]:
+                if "." in self.field.field[col][row] or ("m" in self.field.field[col][row] and self.game_over):
                     screen.blit(self.clicked_box, box_rect)
                 elif "?" in self.field.field[col][row]:
                     screen.blit(self.mine_box, box_rect)
@@ -220,6 +224,16 @@ class MAIN():
                     number_rect = number_surface.get_rect(center = (number_x, number_y))
                     
                     screen.blit(number_surface, number_rect)        # (score_surface, position)
+            
+    def draw_mine(self):
+        for row in range(y_cell_number):
+            for col in range(x_cell_number):
+                # draw mine
+                if "m" in self.field.field[col][row]:
+                    x_pos = int(col * cell_size)
+                    y_pos = int(row * cell_size + menu_height)
+                    box_rect = pygame.Rect(x_pos, y_pos, cell_size, cell_size)
+                    screen.blit(self.mine, box_rect)
                 
     # function for detection any reamaining save places - win
     def win(self):
@@ -232,19 +246,19 @@ class MAIN():
             #     print(item, end = " ")
             # print()
         if remaining_places == 0:
-            # field.draw_field(True) # True - show all
-            print("You're a winner!")
-            self.game_quit()
+            #print("You're a winner!")  # in console write win if win
+            # set sun's look
+            self.menu.actual_sun = self.menu.like_a_boss_sun
             
-        # field.draw_field(True)  # kontrola vykreslení - co se stane po kliknutí na políčko
+            # set variable game_over to True - end
+            self.game_over = True
         
     def mouse_click(self):
-        self.field.click_in_field()
+        # print(self.game_over)
+        if not self.game_over: # block clicking in file while game over
+            self.field.click_in_field()
         self.menu.click_in_menu()
-        
-# ----------------------------------------------------------------------------- Functions
 
-    
 # ----------------------------------------------------------------------------- Inicialization
 pygame.init()
 pygame.display.set_caption("Miny")
@@ -253,6 +267,7 @@ x_cell_number = 10
 y_cell_number = 10
 cell_size = 50
 menu_height = 100
+# sun_is_pressed = False
 
 black_and_white = [0, 20, 70, 150, 255]
 dark_mode = []
@@ -277,9 +292,17 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             # 0 ... left, 1 ... middle, 2 ... right
             mouse_presses = pygame.mouse.get_pressed()
-            if mouse_presses[0] or mouse_presses[2]:    
+            if mouse_presses[0] or mouse_presses[2]:   
                 main.mouse_click()
-    
+                
+            # mouse_presses = pygame.mouse.get_pressed()
+            # if mouse_presses[0]:
+                 
+        if event.type == pygame.MOUSEBUTTONUP:
+            # restart click on the sun - if it was
+            if main.menu.actual_sun == main.menu.surprised_sun:
+                main.menu.actual_sun = main.menu.happy_sun  
+                
     screen.fill(dark_mode[2])
     main.draw_elements()
     pygame.display.update()
